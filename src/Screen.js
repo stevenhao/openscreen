@@ -1,6 +1,7 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 import Storage from './lib/storage';
+import { getOffset } from './lib/image'
 
 export default class Screen extends React.Component {
   constructor() {
@@ -12,7 +13,6 @@ export default class Screen extends React.Component {
   }
 
   componentDidMount() {
-    console.log('component did mount')
     this.updateScreenData()
   }
 
@@ -36,15 +36,21 @@ export default class Screen extends React.Component {
 
   async updateCanvas() {
     if (!this.state.screenData) return
-    const ctx = this.canvas.current.getContext('2d')
+    const canvas = this.canvas.current
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = 'black'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
     const imageEl = new Image()
-    const offset = {
-      x: 100,
-      y: 100,
-    }
+
+    const offset = getOffset(this.iconIndex)
     const promise = new Promise((resolve, reject) => {
       imageEl.onload = () => {
-        ctx.drawImage(imageEl, offset.x, offset.y)
+        console.log(offset)
+        ctx.drawImage(imageEl,
+          offset.left, offset.top, offset.width, offset.height,
+          0, 0, offset.width, offset.height,
+        )
+        // debugger
         console.log('drew image')
         resolve()
       }
@@ -60,7 +66,6 @@ export default class Screen extends React.Component {
     // return that image as a data string (the data:image/png string)
 
     if (!this.canvas.current) return
-    console.log('fetching data')
     const iconData = this.canvas.current.toDataURL()
     this.setState({
       iconData,
@@ -89,8 +94,8 @@ export default class Screen extends React.Component {
     // this will depend on the overall dimensions of the screenshot
     // we will have to figure out if it's iphone 5 vs 5s vs X vs future???
     const dimensions = {
-      width: 200,
-      height: 200,
+      width: 1000,
+      height: 1000,
     }
     const canvasStyle = {
       width: dimensions.width,
