@@ -1,9 +1,16 @@
+import uuid from 'uuid';
 import React, { Component } from 'react';
+import Dropzone from 'react-dropzone';
 import logo from './logo.svg';
 import './App.css';
-import Dropzone from 'react-dropzone';
+import Storage from './lib/storage';
 
 class App extends Component {
+  constructor() {
+    super()
+    this.storage = new Storage()
+  }
+
   handleDrop = (files) => {
     const file = files[0]
     if (!file) {
@@ -11,12 +18,15 @@ class App extends Component {
     }
     const reader = new FileReader()
     reader.onload = (e) => {
-      const result = e.target.result
-      console.log(result)
-      // TODO generate screenId, then save in localStorage, then redirect / render a link to /:screenId/1
+      const screenId = uuid.v4()
+      const screenData = {
+        // NOTE: can add other fields here, e.g. numIcons
+        data: e.target.result,
+      }
+      this.storage.set(screenId, screenData)
+      this.props.history.push(`/${screenId}/1`)
     }
     reader.readAsDataURL(file)
-
   }
 
   render() {
