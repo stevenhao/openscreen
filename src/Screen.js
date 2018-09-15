@@ -5,19 +5,45 @@ import Storage from './lib/storage';
 export default class Screen extends React.Component {
   constructor() {
     super()
+    this.state = {
+    }
     this.storage = new Storage()
+    this.canvas = React.createRef()
   }
 
   componentDidMount() {
+    console.log('component did mount')
     this.updateScreenData()
+    this.updateCanvas()
   }
 
-  componentDidUpdate() {
-    this.updateScreenData()
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.match.params !== this.props.match.params) {
+      this.updateScreenData()
+    }
+    this.updateCanvas()
   }
 
   updateScreenData() {
-    this.screenData = this.storage.get(this.screenId)
+    console.log('updating screen data')
+    const screenData = this.storage.get(this.screenId)
+    this.setState({
+      screenData,
+    })
+  }
+
+  updateCanvas() {
+    if (!this.state.screenData) return
+    const ctx = this.canvas.current.getContext('2d')
+    const imageEl = new Image()
+    const offset = {
+      x: 100,
+      y: 100,
+    }
+    imageEl.onload = () => {
+      ctx.drawImage(imageEl, offset.x, offset.y)
+    }
+    imageEl.src = this.imageData
   }
 
   get screenId() {
@@ -34,18 +60,49 @@ export default class Screen extends React.Component {
     return 16
   }
 
+  get imageData() {
+    return this.state.screenData.data
+  }
+
   get iconData() {
     // this is the fun part
-    // take this.screenData, and render it in an invisible canvas
+    // take this.state.screenData, and render it in an invisible canvas
     // and then crop it / convert that crop to an image
     // return that image as a data string (the data:image/png string)
+
+  }
+
+  renderCanvas() {
+    // this will depend on the overall dimensions of the screenshot
+    // we will have to figure out if it's iphone 5 vs 5s vs X vs future???
+    const dimensions = {
+      width: 200,
+      height: 200,
+    }
+    const canvasStyle = {
+      width: dimensions.width,
+      height: dimensions.height,
+    }
+
+    // todo make this invisible
+    return (
+      <canvas ref={this.canvas} style={canvasStyle}/>
+    )
   }
 
   renderDebugInfo() {
+    const debugStyle = {
+      padding: 20,
+    }
     return (
       <div>
+        <div style={debugStyle}>
+          <h4>The Image:</h4>
+          {this.state.screenData && <img src={this.imageData}></img>}
+        </div>
         <div>Screen Id: {this.screenId}</div>
         <div>Icon Index: {this.iconIndex}</div>
+        {this.renderCanvas()}
       </div>
     )
   }
