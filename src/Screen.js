@@ -14,14 +14,16 @@ export default class Screen extends React.Component {
   componentDidMount() {
     console.log('component did mount')
     this.updateScreenData()
-    this.updateCanvas()
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  async componentDidUpdate(prevProps, prevState) {
     if (prevProps.match.params !== this.props.match.params) {
       this.updateScreenData()
     }
-    this.updateCanvas()
+    if (prevState.screenData !== this.state.screenData) {
+      await this.updateCanvas()
+      this.updateIconData()
+    }
   }
 
   updateScreenData() {
@@ -32,7 +34,7 @@ export default class Screen extends React.Component {
     })
   }
 
-  updateCanvas() {
+  async updateCanvas() {
     if (!this.state.screenData) return
     const ctx = this.canvas.current.getContext('2d')
     const imageEl = new Image()
@@ -40,10 +42,29 @@ export default class Screen extends React.Component {
       x: 100,
       y: 100,
     }
-    imageEl.onload = () => {
-      ctx.drawImage(imageEl, offset.x, offset.y)
-    }
-    imageEl.src = this.imageData
+    const promise = new Promise((resolve, reject) => {
+      imageEl.onload = () => {
+        ctx.drawImage(imageEl, offset.x, offset.y)
+        console.log('drew image')
+        resolve()
+      }
+      imageEl.src = this.imageData
+    })
+    await promise
+  }
+
+  updateIconData() {
+    // this is the fun part
+    // take this.state.screenData, and render it in an invisible canvas
+    // and then crop it / convert that crop to an image
+    // return that image as a data string (the data:image/png string)
+
+    if (!this.canvas.current) return
+    console.log('fetching data')
+    const iconData = this.canvas.current.toDataURL()
+    this.setState({
+      iconData,
+    })
   }
 
   get screenId() {
@@ -62,14 +83,6 @@ export default class Screen extends React.Component {
 
   get imageData() {
     return this.state.screenData.data
-  }
-
-  get iconData() {
-    // this is the fun part
-    // take this.state.screenData, and render it in an invisible canvas
-    // and then crop it / convert that crop to an image
-    // return that image as a data string (the data:image/png string)
-
   }
 
   renderCanvas() {
@@ -94,14 +107,21 @@ export default class Screen extends React.Component {
     const debugStyle = {
       padding: 20,
     }
+    const truncatedDivStyle = {
+      overflow: 'auto',
+      maxWidth: 600,
+    }
     return (
       <div>
         <div style={debugStyle}>
           <h4>The Image:</h4>
           {this.state.screenData && <img src={this.imageData}></img>}
+          <h4>The Icon:</h4>
+          {this.state.screenData && <img src={this.state.iconData}></img>}
         </div>
         <div>Screen Id: {this.screenId}</div>
         <div>Icon Index: {this.iconIndex}</div>
+        <div style={truncatedDivStyle}>Icon Data: {this.state.iconData}</div>
         {this.renderCanvas()}
       </div>
     )
@@ -112,7 +132,7 @@ export default class Screen extends React.Component {
       <Helmet>
         <meta charSet="utf-8" />
         <title>Icon {`${this.iconIndex}`} of {`${this.iconCount}`}</title>
-        <link rel="apple-touch-icon" href={this.iconData}/>
+        <link rel="apple-touch-icon" href={this.state.iconData}/>
       </Helmet>
     )
   }
