@@ -92,6 +92,7 @@ export default class Screen extends React.Component {
     // TODO implement
     const iconIndex = e.target.getAttribute('data-id')
     this.props.history.push(`/${this.screenId}/${iconIndex}`)
+    window.location.href = `/${this.screenId}/${iconIndex}`
   }
 
   renderCanvas() {
@@ -99,16 +100,18 @@ export default class Screen extends React.Component {
     // we will have to figure out if it's iphone 5 vs 5s vs X vs future???
     // TODO use config to set this
     const config = getConfig()
-    const canvasStyle = {
+    const dimensions = {
       width: config.iconW,
       height: config.iconH,
+    }
+    const canvasStyle = {
       position: 'absolute',
       opacity: 0,
     }
 
     // todo make this invisible
     return (
-      <canvas ref={this.canvas} style={canvasStyle}/>
+      <canvas ref={this.canvas} style={canvasStyle} width={dimensions.width} height={dimensions.height}/>
     )
   }
 
@@ -136,8 +139,8 @@ export default class Screen extends React.Component {
         cursor: 'pointer',
         left: offset.left,
         top: offset.top,
-        width: offset.width,
-        height: offset.height,
+        // width: offset.width,
+        // height: offset.height,
         borderRadius: 5,
         // boxSizing: 'border-box',
         border: isSelected ? '3px solid purple' : 'auto',
@@ -149,11 +152,10 @@ export default class Screen extends React.Component {
     return (
       <div style={containerStyle}>
         {_.range(this.iconCount).map(iconIndex => (
-          <div key={`${iconIndex} ${getIsSelected(iconIndex)}`} style={getStyle(iconIndex)}
+          <img key={`${iconIndex} ${getIsSelected(iconIndex)}`} style={getStyle(iconIndex)}
+            src={this.state.imageDataUrls[iconIndex]}
             data-id={iconIndex}
-            onClick={this.handleClick}
-          >
-          </div>
+            onClick={this.handleClick} />
         )) }
       </div>
     )
