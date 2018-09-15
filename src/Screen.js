@@ -1,7 +1,25 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import Storage from './lib/storage';
 
 export default class Screen extends React.Component {
+  constructor() {
+    super()
+    this.storage = new Storage()
+  }
+
+  componentDidMount() {
+    this.updateScreenData()
+  }
+
+  componentDidUpdate() {
+    this.updateScreenData()
+  }
+
+  updateScreenData() {
+    this.screenData = this.storage.get(this.screenId)
+  }
+
   get screenId() {
     const { screenId } = this.props.match.params
     return screenId
@@ -14,6 +32,13 @@ export default class Screen extends React.Component {
 
   get iconCount() {
     return 16
+  }
+
+  get iconData() {
+    // this is the fun part
+    // take this.screenData, and render it in an invisible canvas
+    // and then crop it / convert that crop to an image
+    // return that image as a data string (the data:image/png string)
   }
 
   renderDebugInfo() {
@@ -30,7 +55,7 @@ export default class Screen extends React.Component {
       <Helmet>
         <meta charSet="utf-8" />
         <title>Icon {`${this.iconIndex}`} of {`${this.iconCount}`}</title>
-        <link rel="apple-touch-icon" href={PUSHEEN_DATA}/>
+        <link rel="apple-touch-icon" href={this.iconData}/>
       </Helmet>
     )
   }
