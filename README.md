@@ -31,6 +31,9 @@ This is work in progress, but users will interact with the finished product as f
 An apple touch icon is the icon that apple uses for your webpage when you add it to the home screen.
 When you click "Add to homescreen", your phone will search for a `<link rel="apple-touch-icon">` tag.
 
+### How apple-touch-icon does not work (phew!)
 I believe it's highly likely that it'll **download** the webpage's raw html for this step, and **not execute javascript**. So, using something like React Helmet to dynamically (i.e. post-initial-page-load) modify the contents of `<head>` will probably not work.
 
 Because of this behavior, we will have to bookmark links that have the correct `<head>` tag in their html file (i.e. we need some sort of server, and can't just server `index.html` for all routes, as `now.sh` currently does for the create-react-app setup for our Single Page Application)
+
+*These beliefs are wrong.*
