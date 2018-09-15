@@ -188,7 +188,7 @@ export default class Screen extends React.Component {
     return (
       <Helmet>
         <meta charSet="utf-8" />
-        <title>Icon {`${this.iconIndex}`} of {`${this.iconCount}`}</title>
+        <title>&zwj;</title>
         <link rel="apple-touch-icon" href={this.currentIconData}/>
       </Helmet>
     )
