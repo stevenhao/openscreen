@@ -1,15 +1,22 @@
 const IPHONE6_CONFIG = {
   R: 6,
   C: 4,
+  numIcons: 24,
   iconW: 120,
   paddingW: 54,
   iconH: 120,
   paddingH: 56,
-  extraBottom: 222 // app bar,
+  W: 750,
+  H: 1334,
+  extraBottom: 222, // app bar,
 }
 
 const CONFIGS = [IPHONE6_CONFIG]
 const DEFAULT_CONFIG = IPHONE6_CONFIG
+
+export const getConfig = (config = DEFAULT_CONFIG) => {
+  return config
+}
 
 export const getOffset = (iconIndex, config = DEFAULT_CONFIG) => {
   const {

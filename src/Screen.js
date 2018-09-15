@@ -1,12 +1,15 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import _ from 'lodash'
 import Storage from './lib/storage';
-import { getOffset } from './lib/image'
+import { getOffset, getConfig } from './lib/image'
 
 export default class Screen extends React.Component {
   constructor() {
     super()
     this.state = {
+      imageDataUrls: null,
+      screenData: null,
     }
     this.storage = new Storage()
     this.canvas = React.createRef()
@@ -22,7 +25,6 @@ export default class Screen extends React.Component {
     }
     if (prevState.screenData !== this.state.screenData) {
       await this.updateCanvas()
-      this.updateIconData()
     }
   }
 
@@ -34,7 +36,7 @@ export default class Screen extends React.Component {
     })
   }
 
-  async updateCanvas() {
+  updateCanvas() {
     if (!this.state.screenData) return
     const canvas = this.canvas.current
     const ctx = canvas.getContext('2d')
@@ -42,34 +44,24 @@ export default class Screen extends React.Component {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     const imageEl = new Image()
 
-    const offset = getOffset(this.iconIndex)
-    const promise = new Promise((resolve, reject) => {
-      imageEl.onload = () => {
-        console.log(offset)
+    imageEl.onload = () => {
+      const imageDataUrls = _.range(this.iconCount).map(iconIndex => {
+        const offset = getOffset(iconIndex)
+        console.log(iconIndex, offset)
         ctx.drawImage(imageEl,
-          offset.left, offset.top, offset.width, offset.height,
+            offset.left, offset.top, offset.width, offset.height,
           0, 0, offset.width, offset.height,
         )
-        // debugger
-        console.log('drew image')
-        resolve()
-      }
-      imageEl.src = this.imageData
-    })
-    await promise
-  }
-
-  updateIconData() {
-    // this is the fun part
-    // take this.state.screenData, and render it in an invisible canvas
-    // and then crop it / convert that crop to an image
-    // return that image as a data string (the data:image/png string)
-
-    if (!this.canvas.current) return
-    const iconData = this.canvas.current.toDataURL()
-    this.setState({
-      iconData,
-    })
+        const iconDataUrl = this.canvas.current.toDataURL()
+        console.log(iconDataUrl)
+        return iconDataUrl
+      })
+      this.setState({
+        imageDataUrls,
+      })
+      console.log('set state')
+    }
+    imageEl.src = this.imageData
   }
 
   get screenId() {
@@ -83,28 +75,74 @@ export default class Screen extends React.Component {
   }
 
   get iconCount() {
-    return 16
+    const config = getConfig()
+    return config.numIcons
   }
 
   get imageData() {
     return this.state.screenData.data
   }
 
+  handleClick = (e) => {
+    // TODO implement
+    const id = e.target.getAttribute('data-id')
+    console.log('clicked', id)
+  }
+
   renderCanvas() {
     // this will depend on the overall dimensions of the screenshot
     // we will have to figure out if it's iphone 5 vs 5s vs X vs future???
-    const dimensions = {
-      width: 1000,
-      height: 1000,
-    }
+    // TODO use config to set this
+    const config = getConfig()
     const canvasStyle = {
-      width: dimensions.width,
-      height: dimensions.height,
+      width: config.iconW,
+      height: config.iconH,
+      position: 'absolute',
+      opacity: 0,
     }
 
     // todo make this invisible
     return (
       <canvas ref={this.canvas} style={canvasStyle}/>
+    )
+  }
+
+  renderIconGrid() {
+    if (!this.state.imageDataUrls) return null
+    console.log('render icon grid')
+    const config = getConfig()
+    const selectedIconIndex = this.iconIndex
+    const containerStyle = {
+      position: 'relative',
+      width: config.width,
+      height: config.height,
+    }
+    const getStyle = iconIndex => {
+      const offset = getOffset(iconIndex)
+      const isSelected = iconIndex === selectedIconIndex
+      const imageDataUrl = this.state.imageDataUrls[iconIndex]
+      return {
+        position: 'absolute',
+        left: offset.left,
+        top: offset.top,
+        width: offset.width,
+        height: offset.height,
+        borderRadius: 5,
+        outine: isSelected ? '1px purple solid black' : 'auto',
+        backgroundImage: `url(${imageDataUrl})`,
+      }
+    }
+
+    return (
+      <div style={containerStyle}>
+        {_.range(this.iconCount).map(iconIndex => (
+          <div style={getStyle(iconIndex)}
+            data-id={iconIndex}
+            onClick={this.handleClick}
+          >
+          </div>
+        )) }
+      </div>
     )
   }
 
@@ -127,7 +165,6 @@ export default class Screen extends React.Component {
         <div>Screen Id: {this.screenId}</div>
         <div>Icon Index: {this.iconIndex}</div>
         <div style={truncatedDivStyle}>Icon Data: {this.state.iconData}</div>
-        {this.renderCanvas()}
       </div>
     )
   }
@@ -146,8 +183,10 @@ export default class Screen extends React.Component {
     return (
       <div>
         {this.renderHelmet()}
+        {this.renderCanvas()}
         Hello this is not steven's house
-        {this.renderDebugInfo()}
+        {/*this.renderDebugInfo()*/}
+        {this.renderIconGrid()}
       </div>
     )
   }
